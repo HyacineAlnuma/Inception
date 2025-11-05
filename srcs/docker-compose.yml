@@ -1,9 +1,19 @@
 services:
   nginx:
-    container_name: my_nginx
-    build: requirements/nginx
+    container_name: nginx
+    build: ./requirements/nginx/
     ports:
       - 443:443
+    networks: 
+      - inception
+    restart: always
+
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb/
+    networks: 
+      - inception
+    restart: always
 
   # wordpress:
   #   container_name: wordpress
@@ -18,3 +28,7 @@ services:
     #   - db
     # volumes:
     #   - "./:/var/www/html"
+
+networks:
+  inception:
+    driver: bridge
