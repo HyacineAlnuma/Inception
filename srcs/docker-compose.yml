@@ -3,10 +3,10 @@ services:
     container_name: my_nginx
     build: requirements/nginx
     ports:
-      - "443:443"
+      - 443:443
 
   # wordpress:
-  #   image: wordpress
+  #   container_name: wordpress
   #   ports:
   #     - 9000:9000
   #   environment:
@@ -14,7 +14,7 @@ services:
   #     WORDPRESS_DB_USER: 
   #     WORDPRESS_DB_PASSWORD: 
   #     WORDPRESS_DB_NAME: 
-  #   depends_on:
-  #     - db
-  #   volumes:
-  #     - "./:/var/www/html"
+    # depends_on:
+    #   - db
+    # volumes:
+    #   - "./:/var/www/html"

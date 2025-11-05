@@ -46,3 +46,5 @@ status:
 clean: down
 				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers and images$(_END)"
 				@sudo docker system prune -f --all
+
+re: clean up
