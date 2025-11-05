@@ -1,10 +1,25 @@
 #!/bin/bash
 
-mariadb << eof
-CREATE DATABASE Wordpress;
+mysqld_safe --datadir=/var/lib/mysql &
+
+until mariadb -e "SELECT 1" >/dev/null 2>&1; do
+    sleep 1
+done
+
+mariadb <<EOF
+CREATE DATABASE IF NOT EXISTS Wordpress;
 USE Wordpress;
-CREATE TABLE Users (userid int NOT NULL PRIMARY KEY AUTO_INCREMENT, username varchar(255), role varchar(255));
-INSERT INTO Users (username, role) VALUES ("user1", "admin");
-INSERT INTO Users (username, role) VALUES ("user2", "user");
-eof
+CREATE TABLE IF NOT EXISTS Users (
+    userid INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255),
+    role VARCHAR(255)
+);
+INSERT INTO Users (username, role) VALUES ("user1", "admin"), ("user2", "user");
+EOF
+
+service mariadb stop
+
+exec /usr/bin/mariadbd-safe
+
+
 
