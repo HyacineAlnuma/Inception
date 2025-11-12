@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# until mysqladmin ping -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" --silent; do
-#     sleep 1
-# done
-
 if [ -d wordpress ]; then
 mv wordpress /var/www/html/wordpress
 chown -R www-data:www-data /var/www/html/wordpress/
