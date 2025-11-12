@@ -43,7 +43,11 @@ status:
 				@echo "$(_CYAN)$(_BOLD)[DOCKER CONTAINERS]$(_END)"
 				@sudo docker ps -a
 
-clean: down
+clean_vol:
+				@echo "$(_PURPLE)$(_BOLD)>>>Cleaning volumes$(_END)"
+				@sudo rm -rf /var/www/html/wordpress/*
+				@sudo rm -rf /var/www/html/db/*
+clean: down clean_vol
 				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers and images$(_END)"
 				@sudo docker system prune -f --all
 

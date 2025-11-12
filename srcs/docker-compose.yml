@@ -7,6 +7,11 @@ services:
     networks: 
       - inception
     restart: always
+    volumes:
+      - "wordpress_data:/var/www/html"
+    depends_on:
+      - mariadb
+      - wordpress
 
   mariadb:
     container_name: mariadb
@@ -14,20 +19,40 @@ services:
     networks: 
       - inception
     restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - "mariadb_data:/var/www/html"
 
-  # wordpress:
-  #   container_name: wordpress
-  #   ports:
-  #     - 9000:9000
-  #   environment:
-  #     WORDPRESS_DB_HOST: 
-  #     WORDPRESS_DB_USER: 
-  #     WORDPRESS_DB_PASSWORD: 
-  #     WORDPRESS_DB_NAME: 
-    # depends_on:
-    #   - db
-    # volumes:
-    #   - "./:/var/www/html"
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress/
+    environment:
+      DB_HOST: mariadb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      - mariadb
+    volumes:
+      - "wordpress_data:/var/www/html"
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/www/html/wordpress
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/www/html/db
 
 networks:
   inception:
