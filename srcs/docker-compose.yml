@@ -1,4 +1,5 @@
 services:
+
   nginx:
     container_name: nginx
     build: ./requirements/nginx/
@@ -10,8 +11,10 @@ services:
     volumes:
       - "wordpress_data:/var/www/html"
     depends_on:
-      - mariadb
-      - wordpress
+      mariadb:
+        condition: service_started
+      wordpress:
+        condition: service_started
 
   mariadb:
     container_name: mariadb
@@ -20,40 +23,49 @@ services:
       - inception
     restart: always
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      DB_HOST: ${WP_HOST}
+      DB_USER: ${WP_USER}
+      DB_PASSWORD: ${WP_PASSWORD}
+      DB_NAME: ${WP_NAME}
     volumes:
-      - "mariadb_data:/var/www/html"
+      - "mariadb_data:/var/lib/mysql"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+      start_period: 5s
 
   wordpress:
     container_name: wordpress
     build: ./requirements/wordpress/
-    environment:
-      DB_HOST: mariadb
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+    networks:
+      - inception
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+    restart: always
     volumes:
       - "wordpress_data:/var/www/html"
+    environment:
+      DB_HOST: ${WP_HOST}
+      DB_USER: ${WP_USER}
+      DB_PASSWORD: ${WP_PASSWORD}
+      DB_NAME: ${WP_NAME}
+
+networks:
+  inception:
+    driver: bridge
 
 volumes:
-  wordpress_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /var/www/html/wordpress
   mariadb_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /var/www/html/db
-
-networks:
-  inception:
-    driver: bridge
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/www/html/wordpress
