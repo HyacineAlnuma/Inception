@@ -62,10 +62,10 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /var/www/html/db
+      device: /home/halnuma/data/db
   wordpress_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /var/www/html/wordpress
+      device: /home/halnuma/data/wordpress

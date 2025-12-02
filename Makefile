@@ -45,8 +45,8 @@ status:
 
 clean_vol:
 				@echo "$(_PURPLE)$(_BOLD)>>>Cleaning volumes$(_END)"
-				@sudo rm -rf /var/www/html/wordpress/*
-				@sudo rm -rf /var/www/html/db/*
+				@sudo rm -rf /home/halnuma/data/wordpress/*
+				@sudo rm -rf /home/halnuma/data/db/*
 clean: down clean_vol
 				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers and images$(_END)"
 				@sudo docker system prune -f --all
