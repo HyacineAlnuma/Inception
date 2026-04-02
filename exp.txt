@@ -1,0 +1,100 @@
+DOCKER:
+C'est une plateforme qui va permettre de créer un déployer des containers.
+Ca va permettre de créer un environement clos dans lequel on va faire tourner une application et dans lequel on va 
+installer tout ce dont l'application a besoin pour tourner. De cette manière l'application
+tournera sur n'importe quelle machine sans problème. Un peu comme un VM sans vraiment
+l'etre puisque docker va juste isoler les processus et utiliser le meme noyau ce qui 
+rend le tout beaucoup plus léger.
+-> Images:
+Une image est comme un plan qui va contenir toutes les dépendances et les fichiers de configuration
+dont a besoin une application donnee pour marcher. C'est la recette avec laquelle le container va
+etre créé.
+-> Containers:
+C'est l'instance vivante de l'image. C'est processus qui va executer l'image.
+-> Docker-compose:
+C'est un outil qui va permettre de lancer des applications multi-containers> Aul ieu de lancer les 
+containers un par un en ligne de commande, on créer un docker-compose.yml qui va tout orchestrer, 
+gérer les interactions entre les containers, creer des réseaux entre eux etc.
+PID 1: prmier processus lancerf par le noyau et donc meme chose dans un container, c'est le pere de 
+tous les processus. Quand un enfant meurt il devient un zombie. Si le PID 1 ne gere pas les orphelins
+le container va se remplir de zombie. Quand docker stop ou n'importe quel signal de fin -> SIGTERM au
+PID 1, il faut donc un processus qui tourne au premier plan qui puisse intercepter ce signal, les transmettre
+aux enfants et arreter le container proprement, sinon SIGKILL et les zombies restent. CMD = PID 1
+
+NGINX:
+nginx c'est le serveur web donc en gros le cerveau de l'app, c'est lui qui va recevoir les requetes
+et decider quoi en faire. Il va etre l'interface qui va rediriger les demandes des utilisateurs.
+Une sorte de proxy inverse qui va dissimuler toutes l'architecture se trouvant dans le site.
+-> Conf:
+Le certifiact ssl c'est comme la carte d'identité du site, il prouve que le site est bien celui qu'il prétend
+etre et que les données sont bien chiffrées.
+TLSv1.3: protocol de chiffrement
+root: tout ce que tu dois afficher se trouve ici 
+index: racine du site 
+CGI: quand l'utilisateur demande un fichier php, nginx passe le relais -> wordpress:9000 est un tunnel,
+nginx envoie le fichier au container wordpress sur le port 9000, ce dernier execute le fichier qui renvoie le
+résultat en html a nginx qui lui renvoie le résultat a l'utilisateur.
+A bien comprendre, on parle ici de fastCGI et pas de CGI classique. Nginx ne fork pas, ce qui est trop lourd.Z
+Nginx ouvre juste un socket réseau vers wordpress dans lequel un programme nommé PHP-FPM (FastCGI Process Manager)
+maintient une pool de processus en attente de travail.
+fastcgi_param: sert à envoyer des variables de contexte à PHP.
+tryfiles: sert a tester si un fichier existe. On recoit une requete, on teste uri puis uri/ et ca existe pas 
+on renvoit pas une 404 mais index.php si ca existe
+-> Dockerfile:
+openssl: pour créer le certificat
+remove: une fois le certicat créé plus besoin d'openssl donc on le supprime pour rendre l'image plus légère
+CMD: on lance nginx, par défaut il veut tourner en arriere plan, mais Docker a besoin que le processus principal 
+reste au premier plan sinon il croirait que le programme s'est arrêté et couperait le container immédiatement 
+donc on fait -g daemon off sert
+
+MARIADB:
+-> Script:
+Il faut que mariadb soit PID 1, le probleme c'est qu'on a d'abord besoin de faire la configuration dessus. Si on le
+lance en premier plan au debut du script, mariadb va devenir un enfant du script et ce dernier (bash) sera le PID 1,
+raison pour laquelle on lance mariadb en arriere plan, on fait la conf, on stop mariadb puis on l'exec de maniere a 
+le lancer en premier plan et PID 1 (exec fais tout remplacer).
+until: on sleep tant que le moteur SQL n'est pas démarré, -e = exec, SELECT 1 requete la plus légère, dev/null on redirige
+vers la sortie standard, 2>1 on redirige 2 dans 1 (err vers out).
+sed: on modifie une ligne de la conf mariadb afin qu'elle ecoute toutes les interfaces (par defaut elle ecoute que elle meme
+127.0.0.1), pour accepter les connexions venant de docker.
+SQL: On crée la db, une table user avec 2 users dedans et on créé un admin de la db. * pour la db et toutes ses
+tables. @: at, %: n'importe qu'el hote. Flush: recharge la table des droits afin d'appliquer le grant.
+-> Dockerfile:
+simple
+
+WORDPRESS:
+-> Script:
+config create ne crée pas vraiment le user, ca on le fait dans mariadb. Ici on le configure, on le connecte en quelques sortes
+au user qu'on a créé dans mariadb
+sed: par defaut php-fpm ecoute sur un socket local (/run/php/php8.2-fpm.sock), ca marche uniquement si nginx est sur la meme 
+machine ou meme container. Vu que c'est pas le cas on va le faire écouter sur le port 9000, d'ou il va recevoir les infos que nginx
+va lui envoyer via le reseau interne de docker
+mkdir: c'est un dossier dans lequel php-fpm va stocker des infos, comme .pid 
+-F = foreground
+-> Dockerfile:
+libfcgi-bin pour faire des connexion locale a la fastCGI (juste pour les healthcheck)
+mysql pour les requetes SQL et default pour que WP-CLI puisse faire des opération d'admin sur la base comme wp user create
+WP-CLI est une interface en ligne de commade de wordpress qui permet de gerer le site
+mv permet de déplacer le binaire dans un repertoire de $PATH comme ca je peux juste utiliser "wp" dans le script
+
+DOCKER-COMPOSE:
+-> 443: 
+Nginx est le seul service qui expose un port. Tout le traffic exterieur va rentrer par ici.
+healthcheck: je le fais que dans mariadb pcq wp a pas uniquement besoin que le service soit lancé mais également qu'il
+fonctionne correctement.
+-> test:
+cgi-fcgi permet de "parler le language" fastCGI, bind = connexion locale
+-> Network: 
+Permet de créer un réseau privé entre les containers, afin de pouvoir exposer uniquement le port 443 et qu'ensuite
+tout soit géré en interne. Tout est isolé, on dissimule l'architecture. Chaque container va recevoir une IP privée, docker a
+DNS interne et donc les containers n'ont pas besoin de savoir les IP des autres, ils utilisent juste le nom des services 
+(ex mariadb) et docker traduit automatiquement en la bonne IP interne.
+-> Driver: 
+C'est ce qui va définir comment est créée et gérée une ressource dans docker. bridge va créer un réseau. local va gerer le 
+stockage sur le disque dur. o bind ve dire "n'utilise pas le path par defaut mais celui de device"
+-> Volumes: 
+Servent a la persistance des données, c'est l'endroit dans lequel elles sont sotckées dans le systeme. C'est grace a ca que
+meme si on supprime completement les containers, quand on va le relancer ils auront encore les données (d'ou l'importance des
+IF NOT EXIST dans le SQL)
+
+prune: supprime tous les containers images etc (meme inutilisés et ceux des autres projets) sauf volumes

@@ -12,9 +12,9 @@ services:
       - "wordpress_data:/var/www/html"
     depends_on:
       mariadb:
-        condition: service_started
+        condition: service_healthy
       wordpress:
-        condition: service_started
+        condition: service_healthy
 
   mariadb:
     container_name: mariadb
@@ -23,10 +23,10 @@ services:
       - inception
     restart: always
     environment:
-      DB_HOST: ${WP_HOST}
-      DB_USER: ${WP_USER}
-      DB_PASSWORD: ${WP_PASSWORD}
-      DB_NAME: ${WP_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
     volumes:
       - "mariadb_data:/var/lib/mysql"
     healthcheck:
@@ -34,6 +34,7 @@ services:
       interval: 5s
       retries: 10
       start_period: 5s
+      timeout: 5s
 
   wordpress:
     container_name: wordpress
@@ -47,10 +48,24 @@ services:
     volumes:
       - "wordpress_data:/var/www/html"
     environment:
-      DB_HOST: ${WP_HOST}
-      DB_USER: ${WP_USER}
-      DB_PASSWORD: ${WP_PASSWORD}
-      DB_NAME: ${WP_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      SITE_TITLE: ${SITE_TITLE}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      USER_LOGIN: ${USER_LOGIN}
+      USER_PASSWORD: ${USER_PASSWORD}
+      USER_EMAIL: ${USER_EMAIL}
+    healthcheck:
+      test: ["CMD", "cgi-fcgi", "-bind", "-connect", "localhost:9000"]
+      interval: 5s
+      retries: 10
+      start_period: 5s
+      timeout: 5s
 
 networks:
   inception:

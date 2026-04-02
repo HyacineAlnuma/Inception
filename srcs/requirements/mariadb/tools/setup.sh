@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 mysqld_safe --datadir=/var/lib/mysql &
 
@@ -15,7 +16,7 @@ CREATE TABLE IF NOT EXISTS Users (
     role VARCHAR(255)
 );
 INSERT INTO Users (username, role) VALUES ("user1", "admin"), ("user2", "user");
-CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
+CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';
 FLUSH PRIVILEGES;
 EOF
@@ -23,6 +24,4 @@ sed -i "s/\(bind-address\s*= \).*/\1 0.0.0.0/" /etc/mysql/mariadb.conf.d/50-serv
 service mariadb stop
 
 exec /usr/bin/mariadbd-safe
-
-
 

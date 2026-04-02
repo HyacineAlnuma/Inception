@@ -47,8 +47,13 @@ clean_vol:
 				@echo "$(_PURPLE)$(_BOLD)>>>Cleaning volumes$(_END)"
 				@sudo rm -rf /home/halnuma/data/wordpress/*
 				@sudo rm -rf /home/halnuma/data/db/*
-clean: down clean_vol
-				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers and images$(_END)"
+
+clean: down
+				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers$(_END)"
+				@sudo docker system prune -f --all
+
+fclean: down clean_vol
+				@echo "$(_PURPLE)$(_BOLD)>>>Deleting containers and volumes$(_END)"
 				@sudo docker system prune -f --all
 
 re: clean up

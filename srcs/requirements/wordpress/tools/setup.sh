@@ -1,18 +1,33 @@
 #!/bin/bash
+set -e
 
-if [ -d wordpress ]; then
-mv wordpress /var/www/html/wordpress
-chown -R www-data:www-data /var/www/html/wordpress/
-cd /var/www/html/wordpress/
-find . -type d -exec chmod 755 {} \;
-find . -type f -exec chmod 644 {} \;
-mv wp-config-sample.php wp-config.php
+if [ ! -f "wp-config.php" ]; then
+    wp core download --allow-root
 
-sed -i "s/\(define( 'DB_NAME', '\).*$/\1$DB_NAME' );/" wp-config.php
-sed -i "s/\(define( 'DB_USER', '\).*$/\1$DB_USER' );/" wp-config.php
-sed -i "s/\(define( 'DB_PASSWORD', '\).*$/\1$DB_PASSWORD' );/" wp-config.php
-sed -i "s/\(define( 'DB_HOST', '\).*$/\1$DB_HOST' );/" wp-config.php
-sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 0.0.0.0:9000|' /etc/php/8.2/fpm/pool.d/www.conf
+    wp config create \
+        --dbname="$DB_NAME" \
+        --dbuser="$DB_USER" \
+        --dbpass="$DB_PASSWORD" \
+        --dbhost="$DB_HOST" \
+        --allow-root
+
+    wp core install \
+        --url="$DOMAIN_NAME" \
+        --title="$SITE_TITLE" \
+        --admin_user="$ADMIN_USER" \
+        --admin_password="$ADMIN_PASSWORD" \
+        --admin_email="$ADMIN_EMAIL" \
+        --skip-email \
+        --allow-root
+
+    wp user create "$USER_LOGIN" "$USER_EMAIL" \
+        --role=author \
+        --user_pass="$USER_PASSWORD" \
+        --allow-root
 fi
+
+sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 9000|' /etc/php/8.2/fpm/pool.d/www.conf
+
+mkdir -p /run/php
 
 exec /usr/sbin/php-fpm8.2 -F

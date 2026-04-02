@@ -1,13 +1,20 @@
 FROM debian:12
 
-RUN apt -y update && apt -y install wget
-RUN apt install php8.2-fpm -y
-RUN apt install php8.2-mysql -y
-RUN apt install -y default-mysql-client
+RUN apt -y update && apt -y install \
+    wget \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-cli \
+	libfcgi-bin \
+	default-mysql-client
 
-RUN wget "https://wordpress.org/latest.tar.gz" && \
-tar -xzf latest.tar.gz  && rm latest.tar.gz
+RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
 
-COPY /tools/setup.sh	/
+WORKDIR /var/www/html/wordpress
 
-ENTRYPOINT ["sh", "setup.sh"]
+COPY ./tools/setup.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/setup.sh
+
+ENTRYPOINT ["setup.sh"]
