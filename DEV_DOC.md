@@ -31,5 +31,5 @@ The entire process is automated via a Makefile at the root of the project:
 
 This project uses Docker volumes to ensure that the data isn't lost when containers are stopped or deleted.
 
-* Database Storage: The mariadb_data volume is stored in `/var/lib/mysql` inside the MariaDB container and in /home/halnuma/data/db in the local machine.
-* WordPress Files: The wordpress_data volume is stored in `/var/www/html` inside the WordPress container and in /home/halnuma/data/wordpress in the local machine.
+* Database Storage: The mariadb_data volume is stored in `/var/lib/mysql` inside the MariaDB container and in `/home/halnuma/data/db` in the local machine.
+* WordPress Files: The wordpress_data volume is stored in `/var/www/html` inside the WordPress container and in `/home/halnuma/data/wordpress` in the local machine.
