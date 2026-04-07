@@ -52,7 +52,7 @@ on renvoit pas une 404 mais index.php si ca existe
 * remove: une fois le certicat créé plus besoin d'openssl donc on le supprime pour rendre l'image plus légère
 * CMD: on lance nginx, par défaut il veut tourner en arriere plan, mais Docker a besoin que le processus principal 
 reste au premier plan sinon il croirait que le programme s'est arrêté et couperait le container immédiatement 
-donc on fait -g daemon off sert
+donc on fait -g daemon off
 
 ## MARIADB:
 
@@ -62,7 +62,7 @@ lance en premier plan au debut du script, mariadb va devenir un enfant du script
 raison pour laquelle on lance mariadb en arriere plan, on fait la conf, on stop mariadb puis on l'exec de maniere a 
 le lancer en premier plan et PID 1 (exec fais tout remplacer).
 until: on sleep tant que le moteur SQL n'est pas démarré, -e = exec, SELECT 1 requete la plus légère, dev/null on redirige
-vers la sortie standard, 2>1 on redirige 2 dans 1 (err vers out).
+la sortie standard vers la poubelle, 2>1 on redirige 2 dans 1 (err vers out) donc vers la poubelle, c'est pour ne pas polluer les logs docker.
 sed: on modifie une ligne de la conf mariadb afin qu'elle ecoute toutes les interfaces (par defaut elle ecoute que elle meme
 127.0.0.1), pour accepter les connexions venant de docker.
 SQL: On crée la db, une table user avec 2 users dedans et on créé un admin de la db. * pour la db et toutes ses

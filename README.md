@@ -31,7 +31,7 @@ The entire process is automated via a Makefile at the root of the project:
 ## Project Description
 
 ### 1. Virtual Machines vs Docker
-While a VM includes a full Operating System and its own kernel (making it heavy and slow to boot), Docker shares the host machine's kernel. This makes containers much lighter and efficient. They start in seconds and use significantly less RAM.
+While a VM includes a full Operating System and its own kernel (making it heavy and slow to boot), Docker shares the host machine's kernel. This makes containers much lighter and efficient. They quicker and use less RAM.
 
 ### 2. Secrets vs Environment Variables
 I use a .env file to manage sensitive data like database passwords and admin logins.
